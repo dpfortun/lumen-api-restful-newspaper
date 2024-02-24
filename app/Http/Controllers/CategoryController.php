@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use Illuminate\Support\Str;
 use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+
 
 class CategoryController extends Controller
 {
@@ -44,7 +46,7 @@ class CategoryController extends Controller
 
         $data = $request->all();
         $data['alias'] = Str::slug($data['title']);
-        $data['created_by'] = 'system';
+        $data['created_by'] = Auth::user()->email;
 
         $category = Category::create($data);
 
@@ -66,7 +68,7 @@ class CategoryController extends Controller
 
         if (empty($category)) {
             $category = new Category();
-            
+
             $category->id = $id;
             $category->title = $data['title'];
             $category->alias = $data['alias'];

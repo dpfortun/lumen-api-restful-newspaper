@@ -14,6 +14,7 @@ class AuthController extends Controller
     public function __construct()
     {
         return $this->successResponse(['message' => 'Successfully logged out']);
+        $this->middleware('auth:api', ['except' => ['login']]);
     }
 
     /**
