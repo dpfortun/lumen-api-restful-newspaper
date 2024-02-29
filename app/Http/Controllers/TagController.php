@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tag;
+use Illuminate\Support\Str;
 use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class TagController extends Controller
 {
@@ -42,8 +43,8 @@ class TagController extends Controller
 
         $data = $request->all();
         $data['alias'] = Str::slug($data['title']);
-        $data['created_by'] = 'system';
-        
+        $data['created_by'] = Auth::user()->email;
+
         $content = Tag::create($data);
 
         return $this->successResponse($content, Response::HTTP_CREATED);
@@ -59,7 +60,7 @@ class TagController extends Controller
         $tag = Tag::findOrFail($id);
 
         $data = $request->all();
-        $data['updated_by'] = 'system';
+        $data['updated_by'] = Auth::user()->email;
         $tag->fill($data);
         $tag->save();
         return $this->successResponse($tag, Response::HTTP_OK);
@@ -78,7 +79,7 @@ class TagController extends Controller
         if (isset($data['title'])) {
             $data['alias'] = Str::slug($data['title']);
         }
-        $data['updated_by'] = 'system';
+        $data['updated_by'] = Auth::user()->email;
 
         $content->fill($data);
         $content->save();

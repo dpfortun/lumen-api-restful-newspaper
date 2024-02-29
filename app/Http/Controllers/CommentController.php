@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Content;
 use App\Models\Category;
+use App\Models\Comment;
 use Illuminate\Support\Str;
 use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 
-class ContentController extends Controller
+class CommentController extends Controller
 {
     use ApiResponser;
 
@@ -25,58 +26,34 @@ class ContentController extends Controller
     }
 
     public function index() {
-        $contents = Content::select('id', 'title', 'alias', 'image_url', 'introduction', 'category_title', 'edition_date', 'category_alias')->orderBy('created_at', 'DESC')->paginate(10);
-        return $this->validResponse($contents);
+        $comments = Comment::select('id', 'text', 'sent_date', 'published_date', 'status', 'content_id', 'user_id')->orderBy('created_at', 'DESC')->get();
+        return $this->validResponse($comments);
     }
 
     public function read($id) {
-        $content = Content::findOrFail($id);
-        $content->tags = $content->tags()->select('title', 'alias')->get();
-        return $this->validResponse($content);
+        $comment = Comment::findOrFail($id);
+        return $this->validResponse($comment);
+
     }
 
     public function create(Request $request) {
         $rules = [
-            'pretitle' => 'max:180',
-            'title' => 'required|max:180',
-            'author' => 'required|max:60',
-            'image_url' => 'required|max:255',
-            'introduction' => 'required|max:300',
-            'body' => 'required',
-            'format' => 'required|in:ONLY_TEXT,WITH_IMAGE,WITH_GALLERY,WITH_VIDEO',
-            'status' => 'required|in:WRITING,PUBLISHED,NOT_PUBLISHED,ARCHIVED',
-            'edition_date' => 'required|integer|min:20240101',
-            'category_id' => 'required|integer|exists:categories,id',
-            'tags' => 'required|array'
+            'text' => 'required|max:180',
+            'sent_date' => 'required|integer|min:20240101',
+            'published_date' => 'required|integer|min:20240101',
+            'status' => 'required|in:NOT_PUBLISHED,PUBLISHED',
+            'content_id' => 'required|integer|exists:contents,id',
+            'user_id' => 'required|integer|exists:users,id'
         ];
         $this->validate($request, $rules);
 
         $data = $request->all();
 
-        $category = Category::select('title', 'alias')->where('id', $data['category_id'])->first();
+        $comment = Comment::create($data);
 
-        $data['alias'] = Str::slug($data['title']);
-        $data['created_by'] = Auth::user()->email;
-        $data['category_title'] = $category->title;
-        $data['category_alias'] = $category->alias;
 
-        // Validamos si el content es único, es decir si no hay otro con el mismo (edition_date, category_alias y alias)
-        $exists = Content::where('edition_date', $data['edition_date'])
-            ->where('category_alias', $category->alias)
-            ->where('alias', $data['alias'])
-            ->exists();
 
-        if ($exists) {
-            return $this->errorResponse('There is Content with the same data (edition_date, category, title)', Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $content = Content::create($data);
-
-        // Asocia los tags al content
-        $tags = $request->input('tags');
-        $content->tags()->attach($tags);
-
-        return $this->successResponse($content, Response::HTTP_CREATED);
+        return $this->successResponse($comment, Response::HTTP_CREATED);
     }
 
     public function update($id, Request $request) {
@@ -88,7 +65,7 @@ class ContentController extends Controller
             'introduction' => 'required|max:300',
             'body' => 'required',
             'format' => 'required|in:ONLY_TEXT,WITH_IMAGE,WITH_GALLERY,WITH_VIDEO',
-            'status' => 'required|in:WRITING,PUBLISHED,NOT_PUBLISHED,ARCHIVED',
+            'status' => 'required|in:PUBLISHED,NOT_PUBLISHED,ARCHIVED',
             'edition_date' => 'required|integer|min:20240101',
             'category_id' => 'required|integer|exists:categories,id',
             'tags' => 'required|array'
