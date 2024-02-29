@@ -35,7 +35,6 @@ class AuthController extends Controller
         if (! $token = Auth::attempt($credentials)) {
             return $this->errorResponse('Invalid credentials', Response::HTTP_UNAUTHORIZED);
         }
-
         return $this->successResponse([
             'access_token' => $token,
             'token_type'   => 'bearer',
