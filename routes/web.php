@@ -47,6 +47,13 @@ $router->group(['prefix' => 'api'], function () use ($router) {
         $router->put('/tags/{id}', ['uses' => 'TagController@update']);
         $router->patch('/tags/{id}', ['uses' => 'TagController@patch']);
         $router->delete('/tags/{id}', ['uses' => 'TagController@delete']);
+
+        $router->get('/comments', ['uses' => 'CommentController@index']);
+        $router->get('/comments/{id}', ['uses' => 'CommentController@read']);
+        $router->post('/comments', ['uses' => 'CommentController@create']);
+        $router->put('/comments/{id}', ['uses' => 'CommentController@update']);
+        $router->patch('/comments/{id}', ['uses' => 'CommentController@patch']);
+        $router->delete('/comments/{id}', ['uses' => 'CommentController@delete']);
     });
 
 
